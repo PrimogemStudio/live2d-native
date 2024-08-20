@@ -135,6 +135,14 @@ void Live2DModel::SetupModel()
 		PreloadMotionGroup(group);
 	}
 	_motionManager->StopAllMotions();
+	_breath = CubismBreath::Create();
+	csmVector<CubismBreath::BreathParameterData> breathParameters;
+	breathParameters.PushBack(CubismBreath::BreathParameterData(AngleX, 0.0f, 15.0f, 6.5345f, 0.5f));
+	breathParameters.PushBack(CubismBreath::BreathParameterData(AngleY, 0.0f, 8.0f, 3.5345f, 0.5f));
+	breathParameters.PushBack(CubismBreath::BreathParameterData(AngleZ, 0.0f, 10.0f, 5.5345f, 0.5f));
+	breathParameters.PushBack(CubismBreath::BreathParameterData(BodyAngleX, 0.0f, 4.0f, 15.5345f, 0.5f));
+	breathParameters.PushBack(CubismBreath::BreathParameterData(CubismFramework::GetIdManager()->GetId(DefaultParameterId::ParamBreath), 0.5f, 0.5f, 3.2345f, 0.5f));
+	_breath->SetParameters(breathParameters);
 	CreateRenderer();
 	SetupTextures();
 	_updating = false;
