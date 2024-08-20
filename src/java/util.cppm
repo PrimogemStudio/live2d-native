@@ -3,6 +3,9 @@ module;
 #include <vector>
 #include <Framework/CubismFramework.hpp>
 #include <jni.h>
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 export module Util;
 
 using namespace std;
@@ -12,7 +15,18 @@ export
 {
 	vector<char> LoadFile(const char* path)
 	{
+#ifdef _WIN32
+		wstring convert;
+		{
+			auto len = (int)strlen(path);
+			auto size = MultiByteToWideChar(CP_UTF8, 0, path, len, nullptr, 0);
+			convert.resize(size);
+			MultiByteToWideChar(CP_UTF8, 0, path, len, convert.data(), size);
+		}
+		ifstream in(convert, ios::binary);
+#else
 		ifstream in(path, ios::binary);
+#endif
 		in.seekg(0, ios::end);
 		auto size = (int)in.tellg();
 		in.seekg(0, ios::beg);
