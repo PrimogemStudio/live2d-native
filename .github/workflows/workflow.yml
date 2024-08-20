@@ -1,0 +1,112 @@
+name: Build
+on: [push, pull_request]
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows
+            cmd: |
+              mv build/windows/x64/release/*.dll upload/
+          - os: ubuntu-latest
+            name: Linux
+            cmd: |
+              mv build/linux/x86_64/release/*.so upload/
+          - os: macos-14
+            name: MacOS
+            cmd: |
+              mv build/macosx/arm64/release/*.dylib upload/
+
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install LLVM and Clang
+        uses: hackermdch/install-llvm-action@master
+        with:
+          arm: ${{ matrix.os == 'macos-14' }}
+
+      - name: Install xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: branch@master
+
+      - name: Build MacOS
+        if: ${{ matrix.os == 'macos-14' }}
+        run: |
+          xmake f --toolchain=llvm --sdk="${{ env.LLVM_PATH }}" -yc
+          xmake -j1024 -y
+
+      - name: Build Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install libgl1-mesa-dev
+          xmake f --toolchain=llvm --sdk="${{ env.LLVM_PATH }}" -yc
+          xmake -j1024 -y
+
+      - name: Build Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          xmake f --toolchain=llvm --sdk="${{ env.LLVM_PATH }}" -yc
+          xmake -j1024 -y
+
+      - name: Move Files
+        run: |
+          mkdir upload
+          ${{matrix.cmd}}
+          ls upload
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: libs
+          path: upload/
+
+  deploy:
+    name: Deploy Binaries
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+
+        - uses: actions/download-artifact@v3
+          name: Download Artifacts
+          with:
+            name: libs
+            path: libs/
+
+        - name: Setup Environment (PR)
+          if: ${{ github.event_name == 'pull_request' }}
+          shell: bash
+          run: |
+            result=$(git rev-parse --short ${{ github.event.pull_request.head.sha }})
+            echo "LAST_COMMIT_SHA=$result" >> ${GITHUB_ENV}
+
+        - name: Setup Environment (Push)
+          if: ${{ github.event_name == 'push' }}
+          shell: bash
+          run: |
+            result=$(git rev-parse --short ${{ github.sha }})
+            echo "LAST_COMMIT_SHA=$result" >> ${GITHUB_ENV}        
+
+        - name: Update binary repository
+          run: |
+            git clone https://${{ secrets.TOKEN }}@github.com/PrimogemStudio/live2d-native-binary
+            cd live2d-native-binary
+            git config --global user.token ${{ secrets.TOKEN }}
+            git config --global user.email "guoxiuchen20170402@163.com"
+            git config --global user.name "Jack253-png"
+            cp ../libs/* .
+            git add .
+            git commit -m "Build from ${{ env.LAST_COMMIT_SHA }}"
+            git push
