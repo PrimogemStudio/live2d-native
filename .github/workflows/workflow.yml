@@ -73,6 +73,7 @@ jobs:
     name: Deploy Binaries
     needs: build
     runs-on: ubuntu-latest
+    if: ${{ success() && github.event_name == 'push' }}
     steps:
         - name: Checkout repository
           uses: actions/checkout@v4
@@ -100,7 +101,6 @@ jobs:
             echo "LAST_COMMIT_SHA=$result" >> ${GITHUB_ENV}        
 
         - name: Update binary repository
-          if: ${{ github.event_name == 'push' }}
           run: |
             git clone https://${{ secrets.TOKEN }}@github.com/PrimogemStudio/live2d-native-binary
             cd live2d-native-binary
