@@ -39,10 +39,14 @@ int L2D::RegisterMethods(JNIEnv* env)
 int Live2DModel::RegisterMethods(JNIEnv* env)
 {
 	const auto native = env->FindClass("com/primogemstudio/advancedfmk/live2d/Live2DModel");
-	JNINativeMethod methods[3];
+	JNINativeMethod methods[7];
 	methods[0] = JNIMethod("load", "(Ljava/lang/String;Ljava/lang/String;)V", Load);
 	methods[1] = JNIMethod("update", "(II)V", Update);
 	methods[2] = JNIMethod("release", "(J)V", Release);
+	methods[3] = JNIMethod("startMotion", "(Ljava/lang/String;II)V", StartMotionJ);
+	methods[4] = JNIMethod("setExpression", "(Ljava/lang/String;)V", SetExpressionJ);
+	methods[5] = JNIMethod("getMotionCount", "(Ljava/lang/String;)I", GetMotionCount);
+	methods[6] = JNIMethod("getExpressions", "()[Ljava/lang/String;", GetExpressions);
 	return env->RegisterNatives(native, methods, std::size(methods));
 }
 
@@ -62,6 +66,29 @@ void Live2DModel::Load(JNIEnv*, jobject self, jobject name, jobject path)
 	const auto model = new Live2DModel(name_obj.call<std::string>("toString"), path_obj.call<std::string>("toString"));
 	model->SetupModel();
 	self_obj.set("ptr", (jlong)model);
+}
+
+void Live2DModel::StartMotionJ(JNIEnv*, const jobject self, const jstring group, const jint no, const jint priority)
+{
+	Get(self)->StartMotion(Object(group).call<std::string>("toString").data(), no, priority);
+}
+
+void Live2DModel::SetExpressionJ(JNIEnv*, const jobject self, const jstring id)
+{
+	Get(self)->SetExpression(Object(id).call<std::string>("toString").data());
+}
+
+jint Live2DModel::GetMotionCount(JNIEnv*, const jobject self, const jstring group)
+{
+	return Get(self)->ModelJson->GetMotionCount(Object(group).call<std::string>("toString").data());
+}
+
+jarray Live2DModel::GetExpressions(JNIEnv*, const jobject self)
+{
+	auto ptr = Get(self);
+	Array<string> arr(ptr->ExpressionIds.size());
+	for (int i = 0; i < arr.getLength(); i++) arr.setElement(i, ptr->ExpressionIds[i].GetRawString());
+	return arr.makeLocalReference();
 }
 
 void Live2DModel::Release(JNIEnv*, jclass, jlong ptr)
@@ -109,7 +136,7 @@ void Live2DModel::SetupModel()
 	LoadAsset(ModelJson->GetModelFileName(), [this](auto buff, auto size) { LoadModel(buff, size); });
 	for (auto expressionIndex = 0; expressionIndex < ModelJson->GetExpressionCount(); ++expressionIndex)
 	{
-		LoadAsset(ModelJson->GetExpressionFileName(expressionIndex), [this, expressionIndex](csmByte* buff, csmSizeInt size) {
+		LoadAsset(ModelJson->GetExpressionFileName(expressionIndex), [this, expressionIndex](const csmByte* buff, const csmSizeInt size) {
 			auto expressionName = ModelJson->GetExpressionName(expressionIndex);
 			if (auto motion = LoadExpression(buff, size, expressionName))
 			{
@@ -117,32 +144,46 @@ void Live2DModel::SetupModel()
 				{
 					ACubismMotion::Delete(Expressions[expressionName]);
 					Expressions[expressionName] = nullptr;
+					Expressions[expressionName] = motion;
+					return;
 				}
 				Expressions[expressionName] = motion;
+				ExpressionIds.emplace_back(expressionName);
 			}
 			});
 	}
 	LoadAsset(ModelJson->GetPoseFileName(), [this](auto buff, auto size) { LoadPose(buff, size); });
 	LoadAsset(ModelJson->GetPhysicsFileName(), [this](auto buff, auto size) { LoadPhysics(buff, size); });
 	LoadAsset(ModelJson->GetUserDataFile(), [this](auto buff, auto size) { LoadUserData(buff, size); });
-	csmMap<csmString, csmFloat32> layout;
-	ModelJson->GetLayoutMap(layout);
-	_modelMatrix->SetupFromLayout(layout);
-	_model->SaveParameters();
-	for (csmInt32 i = 0; i < ModelJson->GetMotionGroupCount(); i++)
 	{
-		const csmChar* group = ModelJson->GetMotionGroupName(i);
-		PreloadMotionGroup(group);
+		_breath = CubismBreath::Create();
+		csmVector<CubismBreath::BreathParameterData> breathParameters;
+		breathParameters.PushBack(CubismBreath::BreathParameterData(AngleX, 0.0f, 15.0f, 6.5345f, 0.5f));
+		breathParameters.PushBack(CubismBreath::BreathParameterData(AngleY, 0.0f, 8.0f, 3.5345f, 0.5f));
+		breathParameters.PushBack(CubismBreath::BreathParameterData(AngleZ, 0.0f, 10.0f, 5.5345f, 0.5f));
+		breathParameters.PushBack(CubismBreath::BreathParameterData(BodyAngleX, 0.0f, 4.0f, 15.5345f, 0.5f));
+		breathParameters.PushBack(CubismBreath::BreathParameterData(CubismFramework::GetIdManager()->GetId(DefaultParameterId::ParamBreath), 0.5f, 0.5f, 3.2345f, 0.5f));
+		_breath->SetParameters(breathParameters);
 	}
-	_motionManager->StopAllMotions();
-	_breath = CubismBreath::Create();
-	csmVector<CubismBreath::BreathParameterData> breathParameters;
-	breathParameters.PushBack(CubismBreath::BreathParameterData(AngleX, 0.0f, 15.0f, 6.5345f, 0.5f));
-	breathParameters.PushBack(CubismBreath::BreathParameterData(AngleY, 0.0f, 8.0f, 3.5345f, 0.5f));
-	breathParameters.PushBack(CubismBreath::BreathParameterData(AngleZ, 0.0f, 10.0f, 5.5345f, 0.5f));
-	breathParameters.PushBack(CubismBreath::BreathParameterData(BodyAngleX, 0.0f, 4.0f, 15.5345f, 0.5f));
-	breathParameters.PushBack(CubismBreath::BreathParameterData(CubismFramework::GetIdManager()->GetId(DefaultParameterId::ParamBreath), 0.5f, 0.5f, 3.2345f, 0.5f));
-	_breath->SetParameters(breathParameters);
+	{
+		auto count = ModelJson->GetEyeBlinkParameterCount();
+		if (count > 0) _eyeBlink = CubismEyeBlink::Create(ModelJson);
+		for (int i = 0; i < count; ++i) EyeBlinkIds.PushBack(ModelJson->GetEyeBlinkParameterId(i));
+		count = ModelJson->GetLipSyncParameterCount();
+		for (int i = 0; i < count; ++i) LipSyncIds.PushBack(ModelJson->GetLipSyncParameterId(i));
+	}
+	{
+		csmMap<csmString, csmFloat32> layout;
+		ModelJson->GetLayoutMap(layout);
+		_modelMatrix->SetupFromLayout(layout);
+		_model->SaveParameters();
+		for (csmInt32 i = 0; i < ModelJson->GetMotionGroupCount(); i++)
+		{
+			const csmChar* group = ModelJson->GetMotionGroupName(i);
+			PreloadMotionGroup(group);
+		}
+		_motionManager->StopAllMotions();
+	}
 	CreateRenderer();
 	SetupTextures();
 	_updating = false;
@@ -158,14 +199,15 @@ void Live2DModel::PreloadMotionGroup(const csmChar* group)
 		csmString path = ModelJson->GetMotionFileName(group, i);
 		path = csmString(ModelDir.c_str()) + path;
 		auto buff = LoadFile(path.GetRawString());
-		if (auto tmpMotion = static_cast<CubismMotion*>(LoadMotion((uint8_t*)buff.data(), buff.size(), name.GetRawString())))
+		if (auto motion = static_cast<CubismMotion*>(LoadMotion((uint8_t*)buff.data(), buff.size(), name.GetRawString())))
 		{
 			csmFloat32 fadeTime = ModelJson->GetMotionFadeInTimeValue(group, i);
-			if (fadeTime >= 0.0f) tmpMotion->SetFadeInTime(fadeTime);
+			if (fadeTime >= 0.0f) motion->SetFadeInTime(fadeTime);
 			fadeTime = ModelJson->GetMotionFadeOutTimeValue(group, i);
-			if (fadeTime >= 0.0f) tmpMotion->SetFadeOutTime(fadeTime);
+			if (fadeTime >= 0.0f) motion->SetFadeOutTime(fadeTime);
+			motion->SetEffectIds(EyeBlinkIds, LipSyncIds);
 			if (Motions[name]) ACubismMotion::Delete(Motions[name]);
-			Motions[name] = tmpMotion;
+			Motions[name] = motion;
 		}
 	}
 }
@@ -200,11 +242,17 @@ CubismMotionQueueEntryHandle Live2DModel::StartMotion(const csmChar* group, csmI
 			if (fadeTime >= 0.0f) motion->SetFadeInTime(fadeTime);
 			fadeTime = ModelJson->GetMotionFadeOutTimeValue(group, no);
 			if (fadeTime >= 0.0f) motion->SetFadeOutTime(fadeTime);
+			motion->SetEffectIds(EyeBlinkIds, LipSyncIds);
 			autoDelete = true;
 		}
 	}
 	else motion->SetFinishedMotionHandler(onFinishedMotionHandler);
 	return _motionManager->StartMotionPriority(motion, autoDelete, priority);
+}
+
+void Live2DModel::SetExpression(const csmChar* id)
+{
+	if (auto motion = Expressions[id]; motion != nullptr) _expressionManager->StartMotionPriority(motion, false, Constants::PriorityForce);
 }
 
 void Live2DModel::SetupTextures()
@@ -232,6 +280,7 @@ void Live2DModel::ModelParamUpdate()
 	if (_motionManager->IsFinished()) StartMotion(Constants::MotionGroupIdle, 0, Constants::PriorityIdle);
 	else motionUpdated = _motionManager->UpdateMotion(_model, deltaTimeSeconds);
 	_model->SaveParameters();
+	_opacity = _model->GetModelOpacity();
 	if (!motionUpdated && _eyeBlink) _eyeBlink->UpdateParameters(_model, deltaTimeSeconds);
 	if (_expressionManager) _expressionManager->UpdateMotion(_model, deltaTimeSeconds);
 	_model->AddParameterValue(AngleX, _dragX * 30.0f);

@@ -69,8 +69,10 @@ export namespace L2D
 		csmFloat32 UserTimeSeconds;
 		CubismModelSettingJson* ModelJson;
 		csmVector<CubismIdHandle> EyeBlinkIds;
+		csmVector<CubismIdHandle> LipSyncIds;
 		csmMap<csmString, ACubismMotion*> Motions;
 		csmMap<csmString, ACubismMotion*> Expressions;
+		std::vector<csmString> ExpressionIds;
 		TextureManager TextureManager;
 		const CubismId* AngleX;
 		const CubismId* AngleY;
@@ -85,6 +87,7 @@ export namespace L2D
 		void SetAssetDirectory(const std::string& path);
 		void LoadAsset(const std::string& file, const std::function<void(csmByte*, csmSizeInt)>& callback);
 		CubismMotionQueueEntryHandle StartMotion(const csmChar* group, csmInt32 no, csmInt32 priority, ACubismMotion::FinishedMotionCallback onFinishedMotionHandler = nullptr);
+		void SetExpression(const csmChar* id);
 		void ReleaseModelSetting();
 		void Draw(CubismMatrix44& matrix);
 		void ModelParamUpdate();
@@ -94,6 +97,10 @@ export namespace L2D
 		void ModelOnUpdate(int width, int height, double currentTime);
 		static void Load(JNIEnv* env, jobject self, jobject name, jobject path);
 		static void Update(JNIEnv* env, jobject self, jint width, jint height);
+		static void StartMotionJ(JNIEnv* env, jobject self, jstring group, jint no, jint priority);
+		static void SetExpressionJ(JNIEnv* env, jobject self, jstring id);
+		static jint GetMotionCount(JNIEnv* env, jobject self, jstring group);
+		static jarray GetExpressions(JNIEnv* env, jobject self);
 		static void Release(JNIEnv* env, jclass cls, jlong ptr);
 	public:
 		static int RegisterMethods(JNIEnv* env);

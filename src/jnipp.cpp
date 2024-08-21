@@ -1070,51 +1070,51 @@ namespace jni
 		Array Implementation
 	 */
 
-	template <> Array<bool>::Array(long length) : Object(env()->NewBooleanArray(length)), _length(length)
+	template <> Array<bool>::Array(long length) : Object(env()->NewBooleanArray(length), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<byte_t>::Array(long length) : Object(env()->NewByteArray(length)), _length(length)
+	template <> Array<byte_t>::Array(long length) : Object(env()->NewByteArray(length), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<wchar_t>::Array(long length) : Object(env()->NewCharArray(length)), _length(length)
+	template <> Array<wchar_t>::Array(long length) : Object(env()->NewCharArray(length), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<short>::Array(long length) : Object(env()->NewShortArray(length)), _length(length)
+	template <> Array<short>::Array(long length) : Object(env()->NewShortArray(length), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<int>::Array(long length) : Object(env()->NewIntArray(length)), _length(length)
+	template <> Array<int>::Array(long length) : Object(env()->NewIntArray(length), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<long long>::Array(long length) : Object(env()->NewLongArray(length)), _length(length)
+	template <> Array<long long>::Array(long length) : Object(env()->NewLongArray(length), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<float>::Array(long length) : Object(env()->NewFloatArray(length)), _length(length)
+	template <> Array<float>::Array(long length) : Object(env()->NewFloatArray(length), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<double>::Array(long length) : Object(env()->NewDoubleArray(length)), _length(length)
+	template <> Array<double>::Array(long length) : Object(env()->NewDoubleArray(length), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<std::string>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/String").getHandle(), nullptr)), _length(length)
+	template <> Array<std::string>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/String").getHandle(), nullptr), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<std::wstring>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/String").getHandle(), nullptr)), _length(length)
+	template <> Array<std::wstring>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/String").getHandle(), nullptr), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<Object>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/Object").getHandle(), nullptr)), _length(length)
+	template <> Array<Object>::Array(long length) : Object(env()->NewObjectArray(length, Class("java/lang/Object").getHandle(), nullptr), DeleteLocalInput), _length(length)
 	{
 	}
 
-	template <> Array<Object>::Array(long length, const Class& type) : Object(env()->NewObjectArray(length, type.getHandle(), nullptr)), _length(length)
+	template <> Array<Object>::Array(long length, const Class& type) : Object(env()->NewObjectArray(length, type.getHandle(), nullptr), DeleteLocalInput), _length(length)
 	{
 	}
 
@@ -1262,8 +1262,7 @@ namespace jni
 	template <> void Array<std::string>::setElement(long index, std::string value)
 	{
 		JNIEnv* env = jni::env();
-
-		jobject jvalue = env->NewStringUTF(value.c_str());;
+		jobject jvalue = env->NewStringUTF(value.c_str());
 		env->SetObjectArrayElement(jobjectArray(getHandle()), index, jvalue);
 		env->DeleteLocalRef(jvalue);
 		handleJavaExceptions();

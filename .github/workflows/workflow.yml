@@ -86,20 +86,6 @@ jobs:
             name: libs
             path: libs/
 
-        - name: Setup Environment (PR)
-          if: ${{ github.event_name == 'pull_request' }}
-          shell: bash
-          run: |
-            result=$(git rev-parse --short ${{ github.event.pull_request.head.sha }})
-            echo "LAST_COMMIT_SHA=$result" >> ${GITHUB_ENV}
-
-        - name: Setup Environment (Push)
-          if: ${{ github.event_name == 'push' }}
-          shell: bash
-          run: |
-            result=$(git rev-parse --short ${{ github.sha }})
-            echo "LAST_COMMIT_SHA=$result" >> ${GITHUB_ENV}        
-
         - name: Update binary repository
           run: |
             git clone https://${{ secrets.TOKEN }}@github.com/PrimogemStudio/live2d-native-binary
@@ -109,5 +95,5 @@ jobs:
             git config --global user.name "Jack253-png"
             cp ../libs/* .
             git add .
-            git commit -m "Build from ${{ env.LAST_COMMIT_SHA }}"
+            git commit -m "Build from $(git rev-parse --short ${{ github.sha }})"
             git push

@@ -980,6 +980,7 @@ namespace jni
 		 */
 		jarray getHandle() const noexcept { return jarray(Object::getHandle()); }
 
+		jarray makeLocalReference() const { return jarray(Object::makeLocalReference()); }
 	private:
 		// Instance Variables
 		mutable long _length;   ///< Mutable as it may only finally get set in a getLength() call.
