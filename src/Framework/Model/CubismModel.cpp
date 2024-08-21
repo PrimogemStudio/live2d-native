@@ -23,10 +23,10 @@ CubismModel::CubismModel(Core::csmModel* model)
     , _parameterMaximumValues(NULL)
     , _parameterMinimumValues(NULL)
     , _partOpacities(NULL)
+    , _modelOpacity(1.0f)
     , _isOverwrittenModelMultiplyColors(false)
     , _isOverwrittenModelScreenColors(false)
     , _isOverwrittenCullings(false)
-    , _modelOpacity(1.0f)
 { }
 
 CubismModel::~CubismModel()

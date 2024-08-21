@@ -12,7 +12,6 @@ namespace Live2D {  namespace Cubism {  namespace Framework {
 
 namespace {
 // JSON keys
-const csmChar* Version = "Version";
 const csmChar* Parameters = "Parameters";
 const csmChar* ParameterGroups = "ParameterGroups";
 const csmChar* Parts = "Parts";

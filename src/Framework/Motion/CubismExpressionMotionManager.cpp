@@ -14,9 +14,9 @@
 namespace Live2D { namespace Cubism { namespace Framework {
 
 CubismExpressionMotionManager::CubismExpressionMotionManager()
-    : _currentPriority(0)
+    : _expressionParameterValues(CSM_NEW csmVector<ExpressionParameterValue>())
+    , _currentPriority(0)
     , _reservePriority(0)
-    , _expressionParameterValues(CSM_NEW csmVector<ExpressionParameterValue>())
 { }
 
 CubismExpressionMotionManager::~CubismExpressionMotionManager()
@@ -153,9 +153,6 @@ csmBool CubismExpressionMotionManager::UpdateMotion(CubismModel* model, csmFloat
     // ----- 最新のExpressionのフェードが完了していればそれ以前を削除する ------
     if (motions->GetSize() > 1)
     {
-        CubismExpressionMotion* expressionMotion =
-            (CubismExpressionMotion*)(motions->At(motions->GetSize() - 1))->GetCubismMotion();
-
         csmFloat32 latestFadeWeight = _fadeWeights[_fadeWeights.GetSize() - 1];
         if (latestFadeWeight >= 1.0f)
         {

@@ -75,83 +75,6 @@ csmFloat32 BezierEvaluate(const CubismMotionPoint* points, const csmFloat32 time
     return LerpPoints(p012, p123, t).Value;
 }
 
-csmFloat32 BezierEvaluateBinarySearch(const CubismMotionPoint* points, const csmFloat32 time)
-{
-    const csmFloat32 x_error = 0.01f;
-
-    const csmFloat32 x = time;
-    csmFloat32 x1 = points[0].Time;
-    csmFloat32 x2 = points[3].Time;
-    csmFloat32 cx1 = points[1].Time;
-    csmFloat32 cx2 = points[2].Time;
-
-    csmFloat32 ta = 0.0f;
-    csmFloat32 tb = 1.0f;
-    csmFloat32 t = 0.0f;
-    int i = 0;
-
-    for (csmBool var33 = true; i < 20; ++i) {
-        if (x < x1 + x_error) {
-            t = ta;
-            break;
-        }
-
-        if (x2 - x_error < x) {
-            t = tb;
-            break;
-        }
-
-        csmFloat32 centerx = (cx1 + cx2) * 0.5f;
-        cx1 = (x1 + cx1) * 0.5f;
-        cx2 = (x2 + cx2) * 0.5f;
-        csmFloat32 ctrlx12 = (cx1 + centerx) * 0.5f;
-        csmFloat32 ctrlx21 = (cx2 + centerx) * 0.5f;
-        centerx = (ctrlx12 + ctrlx21) * 0.5f;
-        if (x < centerx) {
-            tb = (ta + tb) * 0.5f;
-            if (centerx - x_error < x) {
-                t = tb;
-                break;
-            }
-
-            x2 = centerx;
-            cx2 = ctrlx12;
-        }
-        else {
-            ta = (ta + tb) * 0.5f;
-            if (x < centerx + x_error) {
-                t = ta;
-                break;
-            }
-
-            x1 = centerx;
-            cx1 = ctrlx21;
-        }
-    }
-
-    if (i == 20) {
-        t = (ta + tb) * 0.5f;
-    }
-
-    if (t < 0.0f)
-    {
-        t = 0.0f;
-    }
-    if (t > 1.0f)
-    {
-        t = 1.0f;
-    }
-
-    const CubismMotionPoint p01 = LerpPoints(points[0], points[1], t);
-    const CubismMotionPoint p12 = LerpPoints(points[1], points[2], t);
-    const CubismMotionPoint p23 = LerpPoints(points[2], points[3], t);
-
-    const CubismMotionPoint p012 = LerpPoints(p01, p12, t);
-    const CubismMotionPoint p123 = LerpPoints(p12, p23, t);
-
-    return LerpPoints(p012, p123, t).Value;
-}
-
 csmFloat32 BezierEvaluateCardanoInterpretation(const CubismMotionPoint* points, const csmFloat32 time)
 {
     const csmFloat32 x = time;
@@ -353,12 +276,8 @@ void CubismMotion::DoUpdateParameters(CubismModel* model, csmFloat32 userTimeSec
         }
     }
 
-    csmInt32 parameterMotionCurveCount = 0;
-
     for (; c < _motionData->CurveCount && curves[c].Type == CubismMotionCurveTarget_Parameter; ++c)
     {
-        parameterMotionCurveCount++;
-
         // Find parameter index.
         parameterIndex = model->GetParameterIndex(curves[c].Id);
 
