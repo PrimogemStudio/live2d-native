@@ -39,7 +39,7 @@ int L2D::RegisterMethods(JNIEnv* env)
 int Live2DModel::RegisterMethods(JNIEnv* env)
 {
 	const auto native = env->FindClass("com/primogemstudio/advancedfmk/live2d/Live2DModel");
-	JNINativeMethod methods[7];
+	JNINativeMethod methods[9];
 	methods[0] = JNIMethod("load", "(Ljava/lang/String;Ljava/lang/String;)V", Load);
 	methods[1] = JNIMethod("update", "(II)V", Update);
 	methods[2] = JNIMethod("release", "(J)V", Release);
@@ -47,12 +47,24 @@ int Live2DModel::RegisterMethods(JNIEnv* env)
 	methods[4] = JNIMethod("setExpression", "(Ljava/lang/String;)V", SetExpressionJ);
 	methods[5] = JNIMethod("getMotionCount", "(Ljava/lang/String;)I", GetMotionCount);
 	methods[6] = JNIMethod("getExpressions", "()[Ljava/lang/String;", GetExpressions);
+	methods[7] = JNIMethod("hitTest", "(Ljava/lang/String;FF)Z", HitTestJ);
+	methods[8] = JNIMethod("setDragging", "(FF)V", SetDraggingJ);
 	return env->RegisterNatives(native, methods, std::size(methods));
 }
 
 static Live2DModel* Get(const jobject self)
 {
 	return (Live2DModel*)Object(self).get<jlong>("ptr");
+}
+
+jboolean Live2DModel::HitTestJ(JNIEnv* env, jobject self, jstring id, jfloat x, jfloat y)
+{
+	return Get(self)->HitTest(Object(id).call<std::string>("toString").data(), x, y);
+}
+
+void Live2DModel::SetDraggingJ(JNIEnv* env, jobject self, jfloat x, jfloat y)
+{
+	Get(self)->SetDragging(x, y);
 }
 
 void Live2DModel::Update(JNIEnv*, jobject self, jint width, jint height)
@@ -316,4 +328,19 @@ void Live2DModel::ModelOnUpdate(int width, int height, double currentTime)
 	else projection.Scale(static_cast<float>(height) / static_cast<float>(width), 1.0f);
 	ModelParamUpdate();
 	Draw(projection);
+}
+
+bool Live2DModel::HitTest(const csmChar* hitAreaName, csmFloat32 x, csmFloat32 y)
+{
+	if (_opacity < 1) return false;
+	const csmInt32 count = ModelJson->GetHitAreasCount();
+	for (csmInt32 i = 0; i < count; i++)
+	{
+		if (strcmp(ModelJson->GetHitAreaName(i), hitAreaName) == 0)
+		{
+			const CubismIdHandle drawID = ModelJson->GetHitAreaId(i);
+			return IsHit(drawID, x, y);
+		}
+	}
+	return false;
 }

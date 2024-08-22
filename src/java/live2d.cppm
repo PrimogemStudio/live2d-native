@@ -95,12 +95,15 @@ export namespace L2D
 		void PreloadMotionGroup(const csmChar* group);
 		void SetupModel();
 		void ModelOnUpdate(int width, int height, double currentTime);
+		bool HitTest(const csmChar* hitAreaName, csmFloat32 x, csmFloat32 y);
 		static void Load(JNIEnv* env, jobject self, jobject name, jobject path);
 		static void Update(JNIEnv* env, jobject self, jint width, jint height);
 		static void StartMotionJ(JNIEnv* env, jobject self, jstring group, jint no, jint priority);
 		static void SetExpressionJ(JNIEnv* env, jobject self, jstring id);
 		static jint GetMotionCount(JNIEnv* env, jobject self, jstring group);
 		static jarray GetExpressions(JNIEnv* env, jobject self);
+		static jboolean HitTestJ(JNIEnv* env, jobject self, jstring id, jfloat x, jfloat y);
+		static void SetDraggingJ(JNIEnv* env, jobject self, jfloat x, jfloat y);
 		static void Release(JNIEnv* env, jclass cls, jlong ptr);
 	public:
 		static int RegisterMethods(JNIEnv* env);
