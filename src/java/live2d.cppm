@@ -96,7 +96,6 @@ export namespace L2D
 		void SetupModel();
 		void ModelOnUpdate(int width, int height, double currentTime);
 		bool HitTest(const csmChar* hitAreaName, csmFloat32 x, csmFloat32 y);
-
 		static void Load(JNIEnv* env, jobject self, jobject name, jobject path);
 		static void Update(JNIEnv* env, jobject self, jint width, jint height);
 		static void StartMotionJ(JNIEnv* env, jobject self, jstring group, jint no, jint priority);

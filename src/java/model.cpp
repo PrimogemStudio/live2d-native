@@ -61,7 +61,7 @@ jboolean Live2DModel::HitTestJ(JNIEnv* env, jobject self, jstring id, jfloat x, 
 	return Get(self)->HitTest(Object(id).call<std::string>("toString").data(), x, y);
 }
 
-void Live2DModel::SetDraggingJ(JNIEnv* env, jobject self, jfloat x, jfloat y) 
+void Live2DModel::SetDraggingJ(JNIEnv* env, jobject self, jfloat x, jfloat y)
 {
 	Get(self)->SetDragging(x, y);
 }
@@ -329,17 +329,17 @@ void Live2DModel::ModelOnUpdate(int width, int height, double currentTime)
 	Draw(projection);
 }
 
-bool Live2DModel::HitTest(const csmChar* hitAreaName, csmFloat32 x, csmFloat32 y) 
+bool Live2DModel::HitTest(const csmChar* hitAreaName, csmFloat32 x, csmFloat32 y)
 {
 	if (_opacity < 1) return false;
 	const csmInt32 count = ModelJson->GetHitAreasCount();
-    for (csmInt32 i = 0; i < count; i++)
-    {
-        if (strcmp(ModelJson->GetHitAreaName(i), hitAreaName) == 0)
-        {
-            const CubismIdHandle drawID = ModelJson->GetHitAreaId(i);
-            return IsHit(drawID, x, y);
-        }
-    }
-    return false;
+	for (csmInt32 i = 0; i < count; i++)
+	{
+		if (strcmp(ModelJson->GetHitAreaName(i), hitAreaName) == 0)
+		{
+			const CubismIdHandle drawID = ModelJson->GetHitAreaId(i);
+			return IsHit(drawID, x, y);
+		}
+	}
+	return false;
 }
