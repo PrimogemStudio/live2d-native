@@ -57,7 +57,8 @@ static Live2DModel* Get(const jobject self)
 	return (Live2DModel*)Object(self).get<jlong>("ptr");
 }
 
-jboolean Live2DModel::HitTestJ(JNIEnv* env, jobject self, jstring id, jfloat x, jfloat y) {
+jboolean Live2DModel::HitTestJ(JNIEnv* env, jobject self, jstring id, jfloat x, jfloat y)
+{
 	return Get(self)->HitTest(Object(id).call<std::string>("toString").data(), x, y);
 }
 
