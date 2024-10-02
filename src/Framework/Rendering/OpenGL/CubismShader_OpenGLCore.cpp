@@ -62,7 +62,7 @@ enum ShaderNames
 
 // SetupMask
 static const csmChar* VertShaderSrcSetupMask =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec4 a_position;"
         "in vec2 a_texCoord;"
         "out vec2 v_texCoord;"
@@ -76,7 +76,7 @@ static const csmChar* VertShaderSrcSetupMask =
         "v_texCoord.y = 1.0 - v_texCoord.y;"
         "}";
 static const csmChar* FragShaderSrcSetupMask =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec2 v_texCoord;"
         "in vec4 v_myPos;"
         "uniform sampler2D s_texture0;"
@@ -91,12 +91,12 @@ static const csmChar* FragShaderSrcSetupMask =
         "* step(v_myPos.x/v_myPos.w, u_baseColor.z)"
         "* step(v_myPos.y/v_myPos.w, u_baseColor.w);"
 
-        "fragColor = u_channelFlag * texture2D(s_texture0 , v_texCoord).a * isInside;"
+        "fragColor = u_channelFlag * texture(s_texture0 , v_texCoord).a * isInside;"
         "}";
 //----- バーテックスシェーダプログラム -----
 // Normal & Add & Mult 共通
 static const csmChar* VertShaderSrc =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec4 a_position;" //v.vertex
         "in vec2 a_texCoord;" //v.texcoord
         "out vec2 v_texCoord;" //v2f.texcoord
@@ -110,7 +110,7 @@ static const csmChar* VertShaderSrc =
 
 // Normal & Add & Mult 共通（クリッピングされたものの描画用）
 static const csmChar* VertShaderSrcMasked =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec4 a_position;"
         "in vec2 a_texCoord;"
         "out vec2 v_texCoord;"
@@ -128,7 +128,7 @@ static const csmChar* VertShaderSrcMasked =
 //----- フラグメントシェーダプログラム -----
 // Normal & Add & Mult 共通
 static const csmChar* FragShaderSrc =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec2 v_texCoord;" //v2f.texcoord
         "uniform sampler2D s_texture0;" //_MainTex
         "uniform vec4 u_baseColor;" //v2f.color
@@ -137,7 +137,7 @@ static const csmChar* FragShaderSrc =
         "out vec4 fragColor;"
         "void main()"
         "{"
-        "vec4 texColor = texture2D(s_texture0 , v_texCoord);"
+        "vec4 texColor = texture(s_texture0 , v_texCoord);"
         "texColor.rgb = texColor.rgb * u_multiplyColor.rgb;"
         "texColor.rgb = texColor.rgb + u_screenColor.rgb - (texColor.rgb * u_screenColor.rgb);"
         "vec4 color = texColor * u_baseColor;"
@@ -146,7 +146,7 @@ static const csmChar* FragShaderSrc =
 
 // Normal & Add & Mult 共通 （PremultipliedAlpha）
 static const csmChar* FragShaderSrcPremultipliedAlpha =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec2 v_texCoord;" //v2f.texcoord
         "uniform sampler2D s_texture0;" //_MainTex
         "uniform vec4 u_baseColor;" //v2f.color
@@ -155,7 +155,7 @@ static const csmChar* FragShaderSrcPremultipliedAlpha =
         "out vec4 fragColor;"
         "void main()"
         "{"
-        "vec4 texColor = texture2D(s_texture0 , v_texCoord);"
+        "vec4 texColor = texture(s_texture0 , v_texCoord);"
         "texColor.rgb = texColor.rgb * u_multiplyColor.rgb;"
         "texColor.rgb = (texColor.rgb + u_screenColor.rgb * texColor.a) - (texColor.rgb * u_screenColor.rgb);"
         "fragColor = texColor * u_baseColor;"
@@ -163,7 +163,7 @@ static const csmChar* FragShaderSrcPremultipliedAlpha =
 
 // Normal & Add & Mult 共通（クリッピングされたものの描画用）in 
 static const csmChar* FragShaderSrcMask =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec2 v_texCoord;"
         "in vec4 v_clipPos;"
         "uniform sampler2D s_texture0;"
@@ -175,12 +175,12 @@ static const csmChar* FragShaderSrcMask =
         "out vec4 fragColor;"
         "void main()"
         "{"
-        "vec4 texColor = texture2D(s_texture0 , v_texCoord);"
+        "vec4 texColor = texture(s_texture0 , v_texCoord);"
         "texColor.rgb = texColor.rgb * u_multiplyColor.rgb;"
         "texColor.rgb = texColor.rgb + u_screenColor.rgb - (texColor.rgb * u_screenColor.rgb);"
         "vec4 col_formask = texColor * u_baseColor;"
         "col_formask.rgb = col_formask.rgb  * col_formask.a ;"
-        "vec4 clipMask = (1.0 - texture2D(s_texture1, v_clipPos.xy / v_clipPos.w)) * u_channelFlag;"
+        "vec4 clipMask = (1.0 - texture(s_texture1, v_clipPos.xy / v_clipPos.w)) * u_channelFlag;"
         "float maskVal = clipMask.r + clipMask.g + clipMask.b + clipMask.a;"
         "col_formask = col_formask * maskVal;"
         "fragColor = col_formask;"
@@ -188,7 +188,7 @@ static const csmChar* FragShaderSrcMask =
 
 // Normal & Add & Mult 共通（クリッピングされて反転使用の描画用）
 static const csmChar* FragShaderSrcMaskInverted =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec2 v_texCoord;"
         "in vec4 v_clipPos;"
         "uniform sampler2D s_texture0;"
@@ -200,12 +200,12 @@ static const csmChar* FragShaderSrcMaskInverted =
         "out vec4 fragColor;"
         "void main()"
         "{"
-        "vec4 texColor = texture2D(s_texture0 , v_texCoord);"
+        "vec4 texColor = texture(s_texture0 , v_texCoord);"
         "texColor.rgb = texColor.rgb * u_multiplyColor.rgb;"
         "texColor.rgb = texColor.rgb + u_screenColor.rgb - (texColor.rgb * u_screenColor.rgb);"
         "vec4 col_formask = texColor * u_baseColor;"
         "col_formask.rgb = col_formask.rgb  * col_formask.a ;"
-        "vec4 clipMask = (1.0 - texture2D(s_texture1, v_clipPos.xy / v_clipPos.w)) * u_channelFlag;"
+        "vec4 clipMask = (1.0 - texture(s_texture1, v_clipPos.xy / v_clipPos.w)) * u_channelFlag;"
         "float maskVal = clipMask.r + clipMask.g + clipMask.b + clipMask.a;"
         "col_formask = col_formask * (1.0 - maskVal);"
         "fragColor = col_formask;"
@@ -213,7 +213,7 @@ static const csmChar* FragShaderSrcMaskInverted =
 
 // Normal & Add & Mult 共通（クリッピングされたものの描画用、PremultipliedAlphaの場合）
 static const csmChar* FragShaderSrcMaskPremultipliedAlpha =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec2 v_texCoord;"
         "in vec4 v_clipPos;"
         "uniform sampler2D s_texture0;"
@@ -225,11 +225,11 @@ static const csmChar* FragShaderSrcMaskPremultipliedAlpha =
         "out vec4 fragColor;"
         "void main()"
         "{"
-        "vec4 texColor = texture2D(s_texture0 , v_texCoord);"
+        "vec4 texColor = texture(s_texture0 , v_texCoord);"
         "texColor.rgb = texColor.rgb * u_multiplyColor.rgb;"
         "texColor.rgb = (texColor.rgb + u_screenColor.rgb * texColor.a) - (texColor.rgb * u_screenColor.rgb);"
         "vec4 col_formask = texColor * u_baseColor;"
-        "vec4 clipMask = (1.0 - texture2D(s_texture1, v_clipPos.xy / v_clipPos.w)) * u_channelFlag;"
+        "vec4 clipMask = (1.0 - texture(s_texture1, v_clipPos.xy / v_clipPos.w)) * u_channelFlag;"
         "float maskVal = clipMask.r + clipMask.g + clipMask.b + clipMask.a;"
         "col_formask = col_formask * maskVal;"
         "fragColor = col_formask;"
@@ -237,7 +237,7 @@ static const csmChar* FragShaderSrcMaskPremultipliedAlpha =
 
 // Normal & Add & Mult 共通（クリッピングされて反転使用の描画用、PremultipliedAlphaの場合）
 static const csmChar* FragShaderSrcMaskInvertedPremultipliedAlpha =
-        "#version 150 core\n"
+        "#version 150\n"
         "in vec2 v_texCoord;"
         "in vec4 v_clipPos;"
         "uniform sampler2D s_texture0;"
@@ -249,11 +249,11 @@ static const csmChar* FragShaderSrcMaskInvertedPremultipliedAlpha =
         "out vec4 fragColor;"
         "void main()"
         "{"
-        "vec4 texColor = texture2D(s_texture0 , v_texCoord);"
+        "vec4 texColor = texture(s_texture0 , v_texCoord);"
         "texColor.rgb = texColor.rgb * u_multiplyColor.rgb;"
         "texColor.rgb = (texColor.rgb + u_screenColor.rgb * texColor.a) - (texColor.rgb * u_screenColor.rgb);"
         "vec4 col_formask = texColor * u_baseColor;"
-        "vec4 clipMask = (1.0 - texture2D(s_texture1, v_clipPos.xy / v_clipPos.w)) * u_channelFlag;"
+        "vec4 clipMask = (1.0 - texture(s_texture1, v_clipPos.xy / v_clipPos.w)) * u_channelFlag;"
         "float maskVal = clipMask.r + clipMask.g + clipMask.b + clipMask.a;"
         "col_formask = col_formask * (1.0 - maskVal);"
         "fragColor = col_formask;"
